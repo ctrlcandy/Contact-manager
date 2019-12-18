@@ -13,23 +13,24 @@ void menu(char* filename)
 
 	loadFromFile(vector, file);
 
-	std::cout << "List of available commands :" << std::endl
-		<< "1. Create contact" << std::endl
-		<< "2. Delete contact" << std::endl
-		<< "3. Edit contact" << std::endl
-		<< "4. Show contact(s)" << std::endl
-		<< "5. Exit" << std::endl;
-
 	int command;
 	while (true)
 	{
+
+		std::cout << "List of available commands :" << std::endl
+			<< "1. Create contact" << std::endl
+			<< "2. Delete contact" << std::endl
+			<< "3. Edit contact" << std::endl
+			<< "4. Show contact(s)" << std::endl
+			<< "5. Exit" << std::endl;
+
 		std::cout << "Main menu command: ";
 		std::cin >> command;
 
 		if (std::cin.fail())
 			command = 0;
 		std::cin.clear();
-		std::cin.ignore(std::cin.rdbuf()->in_avail());
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
 		switch (command)
 		{
@@ -188,9 +189,20 @@ void loadFromFile(Vector<Contact>* vector, std::fstream& file)
 
 
 		pch = strtok(NULL, ";");
+		if (pch == NULL)
+		{
+			std::cout << "ERROR READING FROM FILE!!!" << std::endl;
+			return;
+		}
 		memcpy(contact.phone, pch, sizeof(contact.phone));
 
 		pch = strtok(NULL, ";");
+		if (pch == NULL)
+		{
+			std::cout << "ERROR READING FROM FILE!!!" << std::endl;
+			return;
+		}
+
 		if (strcmp(pch, "FAMILY") == 0)
 			contact.group = 2;
 		else if (strcmp(pch, "FRIENDS") == 0)
@@ -226,6 +238,7 @@ Contact createContact(Vector<Contact>* vector)
 		bool isContinue = false;
 		std::cin.getline(name, 80);
 		for (size_t i = 0; i < vector->size; i++)
+		{
 			if (strcmp(vector->data[i].name, name) == 0)
 			{
 				std::cout << "This name is already in use!" << std::endl
@@ -233,6 +246,14 @@ Contact createContact(Vector<Contact>* vector)
 				isContinue = true;
 				break;
 			}
+			else if (strchr(name, ';') != nullptr)
+			{
+				std::cout << "Please do not use ';' while entering name!" << std::endl
+					<< "Enter new name :" << std::endl;
+				isContinue = true;
+				break;
+			}
+		}
 		if (!isContinue)
 			break;
 	}
@@ -264,8 +285,12 @@ Contact createContact(Vector<Contact>* vector)
 void createContact(Vector<Contact>* vector, std::fstream& file, char* filename, char* argv[], size_t i)
 {
 	for (size_t j = 0; j < vector->size; j++)
+	{
 		if (strcmp(vector->data[j].name, argv[i + 1]) == 0)
 			return;
+		else if (strchr(argv[i+1], ';') != nullptr)
+			return;
+	}
 
 	Contact contact;
 	strcpy(contact.name, argv[i + 1]);
@@ -359,6 +384,13 @@ void editContact(Vector<Contact>* vector)
 								isContinue = true;
 								break;
 							}
+							else if (strchr(newName, ';') != nullptr)
+							{
+								std::cout << "Please do not use ';' while entering name!" << std::endl
+									<< "Enter new name :" << std::endl;
+								isContinue = true;
+								break;
+							}
 						if (!isContinue)
 							break;
 					}
@@ -403,6 +435,8 @@ void editOnlyContactName(Vector<Contact>* vector, std::fstream& file, char* file
 {
 	for (size_t j = 0; j < vector->size; j++)
 		if (strcmp(vector->data[j].name, argv[i + 2]) == 0)
+			return;
+		else if (strchr(argv[i + 2], ';') != nullptr)
 			return;
 
 	for (size_t j = 0; j < vector->size; j++)
